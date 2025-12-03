@@ -1,0 +1,117 @@
+@startuml use-case-diagram.puml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Visiteur" as visitor
+actor "Candidat" as candidate
+actor "Recruteur" as recruiter
+actor "Admin" as admin
+actor "Système Email" as email
+actor "WhatsApp API" as whatsapp
+
+rectangle "Plateforme de Recrutement" {
+  
+  package "Front Office" {
+    usecase "Voir page d'accueil" as UC1
+    usecase "Consulter pages info\n(À propos, Services)" as UC2
+    usecase "Soumettre formulaire contact" as UC3
+    usecase "S'inscrire" as UC4
+    usecase "Se connecter" as UC5
+    usecase "Réinitialiser mot de passe" as UC6
+  }
+  
+  package "Espace Candidat" {
+    usecase "Voir tableau de bord candidat" as UC7
+    usecase "Modifier profil" as UC8
+    usecase "Uploader CV" as UC9
+    usecase "Rechercher offres" as UC10
+    usecase "Postuler à une offre" as UC11
+    usecase "Voir historique candidatures" as UC12
+  }
+  
+  package "Espace Recruteur" {
+    usecase "Voir tableau de bord recruteur" as UC13
+    usecase "Créer offre d'emploi" as UC14
+    usecase "Modifier/Supprimer offre" as UC15
+    usecase "Consulter candidatures reçues" as UC16
+    usecase "Exporter CV en PDF" as UC17
+    usecase "Filtrer candidats" as UC18
+  }
+  
+  package "Espace Admin" {
+    usecase "Gérer utilisateurs" as UC19
+    usecase "Activer/Suspendre compte" as UC20
+    usecase "Modérer offres" as UC21
+    usecase "Consulter messages contact" as UC22
+    usecase "Voir logs système" as UC23
+    usecase "Gérer paiements manuels" as UC24
+  }
+  
+  package "Notifications" {
+    usecase "Envoyer email confirmation" as UC25
+    usecase "Envoyer notification WhatsApp" as UC26
+    usecase "Notifier admin nouveau message" as UC27
+  }
+  
+  package "Fonctionnalités Avancées" {
+    usecase "Matching IA candidat-offre" as UC28
+    usecase "Recherche avancée booléenne" as UC29
+    usecase "Paiement Mobile Money/Stripe" as UC30
+    usecase "Chatbot conversationnel" as UC31
+    usecase "Gamification/Scoring" as UC32
+    usecase "Multilingue (FR/EN)" as UC33
+  }
+}
+
+' Relations Visiteur
+visitor --> UC1
+visitor --> UC2
+visitor --> UC3
+visitor --> UC4
+visitor --> UC5
+visitor --> UC6
+
+' Relations Candidat (hérite de Visiteur)
+candidate --|> visitor
+candidate --> UC7
+candidate --> UC8
+candidate --> UC9
+candidate --> UC10
+candidate --> UC11
+candidate --> UC12
+
+' Relations Recruteur (hérite de Visiteur)
+recruiter --|> visitor
+recruiter --> UC13
+recruiter --> UC14
+recruiter --> UC15
+recruiter --> UC16
+recruiter --> UC17
+recruiter --> UC18
+
+' Relations Admin
+admin --> UC19
+admin --> UC20
+admin --> UC21
+admin --> UC22
+admin --> UC23
+admin --> UC24
+
+' Relations système
+UC4 ..> UC25 : <<include>>
+UC11 ..> UC25 : <<include>>
+UC3 ..> UC27 : <<include>>
+UC25 --> email
+UC26 --> whatsapp
+UC27 --> email
+UC27 --> whatsapp
+
+' Fonctionnalités avancées
+candidate --> UC28
+candidate --> UC29
+recruiter --> UC30
+candidate --> UC31
+candidate --> UC32
+visitor --> UC33
+
+@enduml

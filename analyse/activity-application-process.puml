@@ -1,0 +1,60 @@
+@startuml activity-application-process.puml
+|Candidat|
+start
+:Connexion au compte;
+
+:Rechercher offres d'emploi;
+
+|Système|
+:Afficher liste offres\navec filtres;
+
+|Candidat|
+:Sélectionner une offre;
+
+|Système|
+:Afficher détails offre;
+:Calculer match score;
+:Afficher compatibilité;
+
+|Candidat|
+if (Profil complet ?) then (non)
+  :Compléter profil;
+  :Uploader CV;
+else (oui)
+endif
+
+:Cliquer "Postuler en 1 clic";
+
+|Système|
+:Vérifier si déjà postulé;
+
+if (Déjà postulé ?) then (oui)
+  :Afficher message erreur;
+  stop
+else (non)
+  :Créer candidature;
+  :Attacher CV + profil;
+  :Sauvegarder en BD;
+endif
+
+fork
+  |Email Service|
+  :Envoyer email confirmation\nau candidat;
+fork again
+  |Email Service|
+  :Envoyer notification\nau recruteur;
+fork again
+  |WhatsApp Service|
+  :Envoyer notification WhatsApp\nau recruteur (optionnel);
+fork again
+  |AI Service|
+  :Calculer score matching;
+  :Mettre à jour statistiques;
+end fork
+
+|Candidat|
+:Afficher confirmation;
+:Ajouter à historique;
+
+stop
+@enduml

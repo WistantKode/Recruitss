@@ -1,0 +1,103 @@
+@startuml sequence-apply-job.puml
+actor Candidate
+participant "UI: JobOfferPage" as UI
+participant "ApplicationController" as Controller
+participant "ApplicationService" as Service
+participant "JobOfferRepository" as JobRepo
+participant "CandidateRepository" as CandRepo
+participant "ApplicationRepository" as AppRepo
+participant "AIMatchingService" as AI
+participant "NotificationService" as Notif
+participant "EmailService" as Email
+participant "WhatsAppService" as WhatsApp
+database "Database" as DB
+
+Candidate -> UI: Cliquer "Postuler"
+activate UI
+
+UI -> Controller: applyToJob(jobId, candidateId)
+activate Controller
+
+Controller -> Service: createApplication(jobId, candidateId, coverLetter)
+activate Service
+
+' Vérifications
+Service -> JobRepo: findById(jobId)
+activate JobRepo
+JobRepo -> DB: SELECT * FROM job_offers WHERE id = ?
+DB --> JobRepo: jobOffer
+JobRepo --> Service: jobOffer
+deactivate JobRepo
+
+Service -> CandRepo: findById(candidateId)
+activate CandRepo
+CandRepo -> DB: SELECT * FROM candidates WHERE id = ?
+DB --> CandRepo: candidate
+CandRepo --> Service: candidate
+deactivate CandRepo
+
+' Vérifier si déjà postulé
+Service -> AppRepo: existsByJobAndCandidate(jobId, candidateId)
+activate AppRepo
+AppRepo -> DB: SELECT COUNT(*) FROM applications WHERE...
+DB --> AppRepo: count
+AppRepo --> Service: boolean
+deactivate AppRepo
+
+alt Déjà postulé
+  Service --> Controller: Error: "Déjà postulé"
+  Controller --> UI: Error message
+  UI --> Candidate: Afficher erreur
+else Nouvelle candidature
+  
+  ' Calculer le score de matching
+  Service -> AI: calculateMatchScore(candidate, jobOffer)
+  activate AI
+  AI --> Service: matchScore (0.85)
+  deactivate AI
+  
+  ' Créer la candidature
+  Service -> AppRepo: save(application)
+  activate AppRepo
+  AppRepo -> DB: INSERT INTO applications...
+  DB --> AppRepo: application saved
+  AppRepo --> Service: application
+  deactivate AppRepo
+  
+  ' Envoyer notifications
+  Service -> Notif: notifyApplicationSubmitted(application)
+  activate Notif
+  
+  par Notification candidat
+    Notif -> Email: sendToCandidate(confirmationEmail)
+    activate Email
+    Email --> Notif: sent
+    deactivate Email
+  and Notification recruteur
+    Notif -> Email: sendToRecruiter(newApplicationEmail)
+    activate Email
+    Email --> Notif: sent
+    deactivate Email
+    
+    Notif -> WhatsApp: sendToRecruiter(notification)
+    activate WhatsApp
+    WhatsApp --> Notif: sent
+    deactivate WhatsApp
+  end
+  
+  deactivate Notif
+  
+  ' Créer log
+  Service -> DB: INSERT INTO logs...
+  
+  Service --> Controller: application created
+  deactivate Service
+  
+  Controller --> UI: Success response
+  deactivate Controller
+  
+  UI --> Candidate: Afficher confirmation
+  deactivate UI
+end
+
+@enduml

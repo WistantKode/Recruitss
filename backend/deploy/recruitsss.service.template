@@ -1,0 +1,16 @@
+[Unit]
+Description=Gunicorn Django Service (Recruitsss)
+After=network.target
+
+[Service]
+Type=simple
+User=__USER__
+Group=__GROUP__
+WorkingDirectory=__PROJECT_DIR__
+Environment=DJANGO_SETTINGS_MODULE=config.settings
+ExecStart=__PROJECT_DIR__/.venv/bin/gunicorn --access-logfile - --workers 3 --timeout 60 --bind __BIND__ config.wsgi:application
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

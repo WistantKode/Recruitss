@@ -1,0 +1,87 @@
+@startuml state-job-offer-lifecycle.puml
+[*] --> Brouillon : Recruteur crée
+
+state Brouillon {
+  [*] --> SaisieInfos
+  SaisieInfos --> DefinitionCriteres : Critères ajoutés
+  DefinitionCriteres --> AperçuGenere : Preview créé
+}
+
+Brouillon --> EnAttenteModeration : Recruteur soumet
+
+state EnAttenteModeration {
+  [*] --> FileAttente
+  FileAttente --> SousRevision : Admin prend en charge
+}
+
+EnAttenteModeration --> Publiee : Admin approuve
+EnAttenteModeration --> Rejetee : Non conforme
+
+state Rejetee {
+  [*] --> MotifEnvoye
+  MotifEnvoye --> AttenteCorrectionRecruteur
+}
+
+Rejetee --> EnAttenteModeration : Recruteur corrige et resoumet
+Rejetee --> Supprimee : Recruteur abandonne
+
+state Publiee {
+  [*] --> Visible
+  Visible --> IndexeRecherche : Indexation moteur
+  IndexeRecherche --> CandidatsNotifies : Matching AI
+  CandidatsNotifies --> ReceptionCandidatures : Candidats postulent
+  
+  state ReceptionCandidatures {
+    [*] --> ComptageCandidatures
+    ComptageCandidatures : Compteur actif
+  }
+}
+
+Publiee --> EnPause : Recruteur met en pause
+state EnPause {
+  [*] --> NonVisibleRecherche
+  NonVisibleRecherche : Offre masquée temporairement
+}
+EnPause --> Publiee : Recruteur réactive
+
+Publiee --> Fermee : Date expiration atteinte
+Publiee --> Fermee : Recruteur ferme manuellement
+Publiee --> Fermee : Poste pourvu
+
+state Fermee {
+  [*] --> PlusDeNouvelleCandidature
+  PlusDeNouvelleCandidature --> CandidaturesExistantesAccessibles
+}
+
+Fermee --> Archivee : Après 90 jours
+
+state Archivee {
+  [*] --> StockageHistorique
+  StockageHistorique : Consultation seule
+}
+
+Publiee --> Supprimee : Admin/Recruteur supprime
+Brouillon --> Supprimee : Recruteur abandonne
+EnPause --> Supprimee : Recruteur supprime
+
+state Supprimee {
+  [*] --> SoftDelete
+  SoftDelete --> [*] : Conservé 30j puis purge définitive
+}
+
+Archivee --> [*] : Fin de cycle
+
+note right of Publiee
+  - Visible dans recherches
+  - Notifications envoyées
+  - Compteur de vues actif
+  - Candidatures acceptées
+end note
+
+note right of Fermee
+  - Non visible dans recherches
+  - Candidatures existantes consultables
+  - Statistiques finales générées
+end note
+
+@enduml

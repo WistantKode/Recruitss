@@ -1,0 +1,94 @@
+@startuml sequence-publish-job.puml
+actor Recruiter
+participant "UI: CreateJobPage" as UI
+participant "JobOfferController" as Controller
+participant "JobOfferService" as Service
+participant "RecruiterRepository" as RecRepo
+participant "PaymentService" as PaymentSvc
+participant "JobOfferRepository" as JobRepo
+participant "NotificationService" as Notif
+participant "AIMatchingService" as AI
+database "Database" as DB
+
+Recruiter -> UI: Remplir formulaire offre
+activate UI
+
+Recruiter -> UI: Cliquer "Publier"
+UI -> Controller: createJobOffer(jobData, recruiterId)
+activate Controller
+
+Controller -> Service: createJobOffer(jobData, recruiterId)
+activate Service
+
+' Vérifier le recruteur
+Service -> RecRepo: findById(recruiterId)
+activate RecRepo
+RecRepo -> DB: SELECT * FROM recruiters WHERE id = ?
+DB --> RecRepo: recruiter
+RecRepo --> Service: recruiter
+deactivate RecRepo
+
+' Vérifier le statut de paiement
+Service -> PaymentSvc: checkRecruiterPaymentStatus(recruiterId)
+activate PaymentSvc
+PaymentSvc -> DB: SELECT * FROM payments WHERE recruiter_id = ?
+DB --> PaymentSvc: payment
+PaymentSvc --> Service: paymentValid
+deactivate PaymentSvc
+
+alt Paiement non valide (MVP)
+  Service --> Controller: PaymentRequired
+  Controller --> UI: Redirection WhatsApp Business
+  UI --> Recruiter: Ouvrir WhatsApp pour paiement
+  
+else Paiement valide ou manuel
+  
+  ' Créer l'offre
+  Service -> JobRepo: save(jobOffer)
+  activate JobRepo
+  JobRepo -> DB: INSERT INTO job_offers...
+  DB --> JobRepo: jobOffer saved
+  JobRepo --> Service: jobOffer
+  deactivate JobRepo
+  
+  ' Indexer pour recherche
+  Service -> DB: Index job for search engine
+  
+  ' Trouver candidats correspondants
+  Service -> AI: findMatchingCandidates(jobOffer)
+  activate AI
+  AI -> DB: SELECT candidates with matching skills
+  AI --> Service: matchingCandidates[]
+  deactivate AI
+  
+  ' Notifier les candidats correspondants
+  Service -> Notif: notifyMatchingCandidates(jobOffer, candidates)
+  activate Notif
+  
+  loop Pour chaque candidat correspondant
+    Notif -> DB: INSERT INTO notifications...
+    Notif -> Email: sendJobMatchEmail(candidate, jobOffer)
+  end
+  
+  deactivate Notif
+  
+  ' Notifier admin
+  Service -> Notif: notifyAdminNewJob(jobOffer)
+  activate Notif
+  Notif -> Email: sendToAdmin(notification)
+  deactivate Notif
+  
+  ' Logger l'action
+  Service -> DB: INSERT INTO logs...
+  
+  Service --> Controller: jobOffer created
+  deactivate Service
+  
+  Controller --> UI: Success response
+  deactivate Controller
+  
+  UI --> Candidate: Afficher confirmation + preview
+  deactivate UI
+end
+
+@enduml

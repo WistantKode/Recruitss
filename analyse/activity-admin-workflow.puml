@@ -1,0 +1,60 @@
+@startuml activity-admin-workflow.puml
+|Admin|
+start
+:Connexion admin;
+
+|Système|
+:Afficher dashboard admin;
+
+|Admin|
+while (Tâches à gérer ?) is (oui)
+  
+  if (Type de tâche ?) then (Nouveau message contact)
+    :Consulter message;
+    :Assigner à soi-même;
+    :Répondre par email;
+    :Marquer comme résolu;
+    
+  elseif (Nouvelle offre) then
+    :Modérer offre;
+    if (Offre conforme ?) then (oui)
+      :Approuver;
+    else (non)
+      :Rejeter;
+      :Notifier recruteur;
+    endif
+    
+  elseif (Nouveau utilisateur) then
+    :Vérifier infos utilisateur;
+    if (Compte valide ?) then (oui)
+      :Activer compte;
+      :Envoyer email bienvenue;
+    else (non)
+      :Suspendre compte;
+      :Notifier utilisateur;
+    endif
+    
+  elseif (Paiement manuel) then
+    :Vérifier preuve paiement;
+    if (Paiement confirmé ?) then (oui)
+      :Enregistrer paiement;
+      :Activer compte recruteur;
+      :Définir date expiration;
+    else (non)
+      :Demander clarification;
+    endif
+    
+  else (Consulter logs)
+    :Filtrer logs système;
+    :Analyser activité;
+    if (Activité suspecte ?) then (oui)
+      :Suspendre compte;
+      :Créer alerte sécurité;
+    endif
+  endif
+  
+endwhile (non)
+
+:Se déconnecter;
+stop
+@enduml

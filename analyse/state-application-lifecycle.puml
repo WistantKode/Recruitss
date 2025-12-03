@@ -1,0 +1,69 @@
+@startuml state-application-lifecycle.puml
+[*] --> Brouillon : Candidat commence
+
+state Brouillon {
+  [*] --> SaisieInfos
+  SaisieInfos --> AttachementCV : CV uploadé
+  AttachementCV --> LettreMotivation : Lettre ajoutée (optionnel)
+}
+
+Brouillon --> Soumise : Candidat soumet
+
+state Soumise {
+  [*] --> EnAttente
+  EnAttente --> NotificationEnvoyee : Email/WhatsApp envoyé
+}
+
+Soumise --> Vue : Recruteur ouvre
+
+state Vue {
+  [*] --> ConsultationProfil
+  ConsultationProfil --> AnalyseCV : Téléchargement CV
+}
+
+Vue --> Preselectionne : Recruteur intéressé
+Vue --> Rejetee : Profil non correspondant
+
+state Preselectionne {
+  [*] --> DansShortlist
+  DansShortlist --> ContactPris : Email/appel au candidat
+}
+
+Preselectionne --> EntretienProgramme : Date fixée
+Preselectionne --> Rejetee : Finalement non retenu
+
+state EntretienProgramme {
+  [*] --> RappelEnvoye
+  RappelEnvoye --> EntretienEnCours : J-1 puis jour J
+  EntretienEnCours --> FeedbackRecueilli : Post-entretien
+}
+
+EntretienProgramme --> Acceptee : Candidat sélectionné
+EntretienProgramme --> Rejetee : Candidat non retenu
+
+state Acceptee {
+  [*] --> OffreEnvoyee
+  OffreEnvoyee --> Negociation : Contre-proposition
+  Negociation --> ContraSigne : Accord trouvé
+  ContraSigne --> [*]
+}
+
+state Rejetee {
+  [*] --> NotificationRejet
+  NotificationRejet --> Archive
+  Archive --> [*]
+}
+
+Soumise --> Retiree : Candidat retire
+Preselectionne --> Retiree : Candidat retire
+EntretienProgramme --> Retiree : Candidat retire
+
+state Retiree {
+  [*] --> AnnulationEnregistree
+}
+
+Acceptee --> [*] : Processus terminé
+Rejetee --> [*] : Archivé
+Retiree --> [*] : Annulé
+
+@enduml

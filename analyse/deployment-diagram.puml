@@ -1,0 +1,165 @@
+@startuml deployment-diagram.puml
+skinparam nodeStyle rectangle
+
+node "Client Browser" {
+  [Web Application\n(React/Next.js)]
+}
+
+node "CDN (CloudFront/Cloudflare)" {
+  [Static Assets]
+  [Cached Pages]
+  [Images/CV Files]
+}
+
+node "Load Balancer (AWS ALB / Nginx)" {
+  [Traffic Distribution]
+  [SSL Termination]
+  [Health Checks]
+}
+
+node "Web Server 1 (EC2/Container)" {
+  [Next.js Server]
+  [API Routes]
+  [SSR Engine]
+}
+
+node "Web Server 2 (EC2/Container)" {
+  [Next.js Server]
+  [API Routes]
+  [SSR Engine]
+}
+
+node "Application Server 1" {
+  component "Backend Services" {
+    [Auth Service]
+    [User Service]
+    [Job Service]
+    [Application Service]
+  }
+}
+
+node "Application Server 2" {
+  component "Backend Services" {
+    [Payment Service]
+    [Notification Service]
+    [AI Matching Service]
+    [Search Service]
+  }
+}
+
+node "Worker Servers" {
+  [Email Queue Worker]
+  [WhatsApp Queue Worker]
+  [AI Processing Worker]
+  [Report Generator]
+}
+
+database "Primary Database\n(PostgreSQL RDS)" {
+  [Master DB]
+}
+
+database "Read Replica 1\n(PostgreSQL)" {
+  [Replica DB 1]
+}
+
+database "Read Replica 2\n(PostgreSQL)" {
+  [Replica DB 2]
+}
+
+node "Cache Layer" {
+  [Redis Cluster\nMaster]
+  [Redis Cluster\nReplica 1]
+  [Redis Cluster\nReplica 2]
+}
+
+node "Message Queue" {
+  [RabbitMQ/SQS\nBroker]
+}
+
+node "Search Cluster" {
+  [Elasticsearch\nNode 1]
+  [Elasticsearch\nNode 2]
+  [Elasticsearch\nNode 3]
+}
+
+cloud "External Services" {
+  [SendGrid\nEmail API]
+  [Twilio\nWhatsApp API]
+  [Stripe\nPayment API]
+  [OpenAI API\nML Models]
+}
+
+cloud "Object Storage" {
+  [AWS S3\nCV Storage]
+  [S3 Bucket\nCompany Logos]
+  [S3 Bucket\nBackups]
+}
+
+node "Monitoring & Logs" {
+  [CloudWatch/\nDatadog]
+  [Sentry\nError Tracking]
+  [ELK Stack\nLog Aggregation]
+}
+
+' Connections
+[Web Application\n(React/Next.js)] --> [CDN (CloudFront/Cloudflare)] : HTTPS
+[CDN (CloudFront/Cloudflare)] --> [Load Balancer (AWS ALB / Nginx)] : HTTPS
+[Load Balancer (AWS ALB / Nginx)] --> [Web Server 1 (EC2/Container)] : HTTP/2
+[Load Balancer (AWS ALB / Nginx)] --> [Web Server 2 (EC2/Container)] : HTTP/2
+
+[Web Server 1 (EC2/Container)] --> [Application Server 1] : gRPC/REST
+[Web Server 2 (EC2/Container)] --> [Application Server 2] : gRPC/REST
+
+[Application Server 1] --> [Primary Database\n(PostgreSQL RDS)] : TCP/5432 (Write)
+[Application Server 2] --> [Read Replica 1\n(PostgreSQL)] : TCP/5432 (Read)
+[Application Server 2] --> [Read Replica 2\n(PostgreSQL)] : TCP/5432 (Read)
+
+[Primary Database\n(PostgreSQL RDS)] --> [Read Replica 1\n(PostgreSQL)] : Replication
+[Primary Database\n(PostgreSQL RDS)] --> [Read Replica 2\n(PostgreSQL)] : Replication
+
+[Application Server 1] --> [Redis Cluster\nMaster] : TCP/6379
+[Application Server 2] --> [Redis Cluster\nReplica 1] : TCP/6379
+[Redis Cluster\nMaster] --> [Redis Cluster\nReplica 1] : Replication
+[Redis Cluster\nMaster] --> [Redis Cluster\nReplica 2] : Replication
+
+[Application Server 1] --> [Message Queue] : AMQP
+[Application Server 2] --> [Message Queue] : AMQP
+[Worker Servers] --> [Message Queue] : AMQP
+
+[Worker Servers] --> [SendGrid\nEmail API] : HTTPS
+[Worker Servers] --> [Twilio\nWhatsApp API] : HTTPS
+[Application Server 2] --> [Stripe\nPayment API] : HTTPS
+[Application Server 2] --> [OpenAI API\nML Models] : HTTPS
+
+[Application Server 1] --> [Search Cluster] : HTTP/9200
+[Application Server 2] --> [Search Cluster] : HTTP/9200
+
+[Application Server 1] --> [AWS S3\nCV Storage] : HTTPS
+[Application Server 2] --> [AWS S3\nCV Storage] : HTTPS
+
+[Web Server 1 (EC2/Container)] --> [CloudWatch/\nDatadog] : Metrics
+[Application Server 1] --> [Sentry\nError Tracking] : HTTPS
+[Worker Servers] --> [ELK Stack\nLog Aggregation] : TCP
+
+note right of [Load Balancer (AWS ALB / Nginx)]
+  - Répartition de charge Round Robin
+  - Health checks toutes les 30s
+  - Auto-scaling basé sur CPU
+  - Support WebSocket
+end note
+
+note right of [Primary Database\n(PostgreSQL RDS)]
+  - Automated backups daily
+  - Point-in-time recovery
+  - Multi-AZ deployment
+  - Encrypted at rest
+end note
+
+note right of [Redis Cluster\nMaster]
+  - Session storage
+  - Cache invalidation
+  - Rate limiting
+  - Real-time analytics
+end note
+
+@enduml

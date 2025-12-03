@@ -1,0 +1,168 @@
+@startuml component-diagram.puml
+skinparam componentStyle rectangle
+
+package "Frontend (Next.js / React)" {
+  [Landing Pages] as Landing
+  [Auth Pages] as Auth
+  [Candidate Dashboard] as CandidateDash
+  [Recruiter Dashboard] as RecruiterDash
+  [Admin Dashboard] as AdminDash
+  [Job Search UI] as JobSearch
+  [Application Form] as AppForm
+  [Profile Management] as ProfileMgmt
+}
+
+package "API Layer (REST / GraphQL)" {
+  [Authentication API] as AuthAPI
+  [User API] as UserAPI
+  [Job Offers API] as JobAPI
+  [Applications API] as AppAPI
+  [Notifications API] as NotifAPI
+  [Payments API] as PaymentAPI
+  [Admin API] as AdminAPI
+  [Search API] as SearchAPI
+}
+
+package "Business Logic Layer" {
+  [Auth Service] as AuthSvc
+  [User Service] as UserSvc
+  [Job Service] as JobSvc
+  [Application Service] as AppSvc
+  [Notification Service] as NotifSvc
+  [Payment Service] as PaymentSvc
+  [AI Matching Service] as AISvc
+  [Search Engine Service] as SearchSvc
+  [Chatbot Service] as ChatbotSvc
+  [Gamification Service] as GameSvc
+}
+
+package "Data Access Layer" {
+  [User Repository] as UserRepo
+  [Job Repository] as JobRepo
+  [Application Repository] as AppRepo
+  [Payment Repository] as PaymentRepo
+  [Notification Repository] as NotifRepo
+  [Log Repository] as LogRepo
+}
+
+database "PostgreSQL Database" {
+  [users]
+  [candidates]
+  [recruiters]
+  [admins]
+  [job_offers]
+  [applications]
+  [payments]
+  [notifications]
+  [contact_messages]
+  [logs]
+  [seo_metadata]
+}
+
+package "External Services" {
+  [Email Service\n(SendGrid/SMTP)] as EmailSvc
+  [WhatsApp API\n(Twilio)] as WhatsAppSvc
+  [File Storage\n(AWS S3/Cloudinary)] as Storage
+  [Payment Gateway\n(Stripe)] as Stripe
+  [Mobile Money API] as MoMo
+  [AI/ML Engine\n(TensorFlow/OpenAI)] as AIEngine
+  [Search Engine\n(Elasticsearch/Algolia)] as ElasticSearch
+}
+
+package "Infrastructure" {
+  [Redis Cache] as Cache
+  [Message Queue\n(RabbitMQ/SQS)] as Queue
+  [CDN] as CDN
+  [Load Balancer] as LB
+}
+
+' Frontend -> API
+Landing --> AuthAPI
+Auth --> AuthAPI
+CandidateDash --> UserAPI
+CandidateDash --> JobAPI
+CandidateDash --> AppAPI
+RecruiterDash --> JobAPI
+RecruiterDash --> AppAPI
+RecruiterDash --> PaymentAPI
+AdminDash --> AdminAPI
+JobSearch --> SearchAPI
+AppForm --> AppAPI
+ProfileMgmt --> UserAPI
+
+' API -> Services
+AuthAPI --> AuthSvc
+UserAPI --> UserSvc
+JobAPI --> JobSvc
+AppAPI --> AppSvc
+NotifAPI --> NotifSvc
+PaymentAPI --> PaymentSvc
+AdminAPI --> UserSvc
+AdminAPI --> JobSvc
+SearchAPI --> SearchSvc
+
+' Services -> Repositories
+AuthSvc --> UserRepo
+UserSvc --> UserRepo
+JobSvc --> JobRepo
+AppSvc --> AppRepo
+AppSvc --> NotifSvc
+PaymentSvc --> PaymentRepo
+NotifSvc --> NotifRepo
+JobSvc --> AISvc
+AppSvc --> AISvc
+
+' Repositories -> Database
+UserRepo --> users
+UserRepo --> candidates
+UserRepo --> recruiters
+UserRepo --> admins
+JobRepo --> job_offers
+AppRepo --> applications
+PaymentRepo --> payments
+NotifRepo --> notifications
+LogRepo --> logs
+
+' Services -> External Services
+NotifSvc --> EmailSvc
+NotifSvc --> WhatsAppSvc
+UserSvc --> Storage
+JobSvc --> Storage
+PaymentSvc --> Stripe
+PaymentSvc --> MoMo
+AISvc --> AIEngine
+SearchSvc --> ElasticSearch
+
+' Infrastructure
+AuthSvc --> Cache
+UserSvc --> Cache
+JobSvc --> Cache
+NotifSvc --> Queue
+CDN --> Landing
+CDN --> Storage
+LB --> AuthAPI
+LB --> UserAPI
+LB --> JobAPI
+
+note right of AISvc
+  - Calcul score matching
+  - Recommandations personnalisées
+  - Analyse profils candidats
+  - Prédiction succès candidature
+end note
+
+note right of SearchSvc
+  - Recherche full-text
+  - Filtres avancés
+  - Recherche booléenne
+  - Auto-complétion
+end note
+
+note right of Cache
+  - Sessions utilisateurs
+  - Offres populaires
+  - Résultats recherche
+  - API rate limiting
+end note
+
+@enduml

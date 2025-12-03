@@ -1,0 +1,357 @@
+@startuml class-diagram.puml
+skinparam classAttributeIconSize 0
+
+' ==================== UTILISATEURS ====================
+abstract class User {
+  # id: UUID
+  # email: String
+  # password: String (hashed)
+  # firstName: String
+  # lastName: String
+  # phone: String
+  # role: UserRole
+  # status: AccountStatus
+  # createdAt: DateTime
+  # updatedAt: DateTime
+  # lastLoginAt: DateTime
+  + login(): boolean
+  + logout(): void
+  + resetPassword(): void
+  + updateProfile(): void
+  + activate(): void
+  + suspend(): void
+}
+
+enum UserRole {
+  CANDIDATE
+  RECRUITER
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+class Candidate {
+  - bio: Text
+  - skills: String[]
+  - experience: Integer
+  - education: String
+  - desiredSalary: Decimal
+  - availableFrom: Date
+  - location: String
+  - cvUrl: String
+  - profileCompleteness: Integer
+  + uploadCV(): void
+  + updateSkills(): void
+  + applyToJob(): void
+  + viewApplicationHistory(): Application[]
+  + getMatchingJobs(): JobOffer[]
+}
+
+class Recruiter {
+  - companyName: String
+  - companyDescription: Text
+  - companyLogo: String
+  - website: String
+  - companySize: String
+  - industry: String
+  - paymentStatus: PaymentStatus
+  + createJobOffer(): JobOffer
+  + updateJobOffer(): void
+  + deleteJobOffer(): void
+  + viewApplications(): Application[]
+  + exportCandidateCV(): PDF
+}
+
+class Admin {
+  - permissions: String[]
+  - department: String
+  + manageUsers(): void
+  + moderateJobOffers(): void
+  + viewContactMessages(): ContactMessage[]
+  + viewSystemLogs(): Log[]
+  + managePayments(): void
+}
+
+' ==================== OFFRES D'EMPLOI ====================
+class JobOffer {
+  - id: UUID
+  - title: String
+  - description: Text
+  - requirements: Text
+  - responsibilities: Text
+  - salary: SalaryRange
+  - contractType: ContractType
+  - location: String
+  - remote: Boolean
+  - skills: String[]
+  - experienceLevel: ExperienceLevel
+  - status: OfferStatus
+  - publishedAt: DateTime
+  - expiresAt: DateTime
+  - views: Integer
+  - recruiterId: UUID
+  + publish(): void
+  + unpublish(): void
+  + update(): void
+  + delete(): void
+  + getApplications(): Application[]
+}
+
+class SalaryRange {
+  - min: Decimal
+  - max: Decimal
+  - currency: String
+  - period: SalaryPeriod
+}
+
+enum ContractType {
+  CDI
+  CDD
+  FREELANCE
+  INTERNSHIP
+  APPRENTICESHIP
+}
+
+enum ExperienceLevel {
+  JUNIOR
+  INTERMEDIATE
+  SENIOR
+  EXPERT
+}
+
+enum OfferStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum SalaryPeriod {
+  HOURLY
+  MONTHLY
+  YEARLY
+}
+
+' ==================== CANDIDATURES ====================
+class Application {
+  - id: UUID
+  - candidateId: UUID
+  - jobOfferId: UUID
+  - coverLetter: Text
+  - status: ApplicationStatus
+  - appliedAt: DateTime
+  - updatedAt: DateTime
+  - matchScore: Float
+  - recruiterNotes: Text
+  + submit(): void
+  + withdraw(): void
+  + updateStatus(): void
+  + addRecruiterNote(): void
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  VIEWED
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  REJECTED
+  ACCEPTED
+  WITHDRAWN
+}
+
+' ==================== MESSAGES & CONTACT ====================
+class ContactMessage {
+  - id: UUID
+  - name: String
+  - email: String
+  - phone: String
+  - subject: String
+  - message: Text
+  - status: MessageStatus
+  - createdAt: DateTime
+  - respondedAt: DateTime
+  - assignedTo: UUID
+  + markAsRead(): void
+  + markAsResolved(): void
+  + assignToAdmin(): void
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  IN_PROGRESS
+  RESOLVED
+}
+
+' ==================== NOTIFICATIONS ====================
+class Notification {
+  - id: UUID
+  - userId: UUID
+  - type: NotificationType
+  - channel: NotificationChannel
+  - title: String
+  - message: Text
+  - data: JSON
+  - read: Boolean
+  - sentAt: DateTime
+  + send(): void
+  + markAsRead(): void
+}
+
+enum NotificationType {
+  ACCOUNT_CREATED
+  APPLICATION_SUBMITTED
+  APPLICATION_STATUS_CHANGED
+  NEW_MESSAGE
+  JOB_MATCH
+  PASSWORD_RESET
+}
+
+enum NotificationChannel {
+  EMAIL
+  WHATSAPP
+  IN_APP
+}
+
+' ==================== PAIEMENT ====================
+class Payment {
+  - id: UUID
+  - recruiterId: UUID
+  - amount: Decimal
+  - currency: String
+  - method: PaymentMethod
+  - status: PaymentStatus
+  - transactionId: String
+  - createdAt: DateTime
+  - paidAt: DateTime
+  - validUntil: DateTime
+  + processPayment(): void
+  + verifyPayment(): boolean
+  + refund(): void
+}
+
+enum PaymentMethod {
+  MANUAL
+  MOBILE_MONEY
+  STRIPE
+  WHATSAPP_BUSINESS
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+' ==================== SYSTÈME ====================
+class Log {
+  - id: UUID
+  - userId: UUID
+  - action: String
+  - entityType: String
+  - entityId: UUID
+  - ipAddress: String
+  - userAgent: String
+  - createdAt: DateTime
+  + create(): void
+  + query(): Log[]
+}
+
+class SEOMetadata {
+  - id: UUID
+  - page: String
+  - title: String
+  - description: String
+  - keywords: String[]
+  - ogImage: String
+  - ogTitle: String
+  - ogDescription: String
+  + update(): void
+}
+
+' ==================== FONCTIONNALITÉS AVANCÉES ====================
+class AIMatching {
+  - algorithm: String
+  - version: String
+  + calculateMatchScore(candidate: Candidate, job: JobOffer): Float
+  + getRecommendations(candidate: Candidate): JobOffer[]
+  + analyzeCandidateProfile(candidate: Candidate): AnalysisResult
+}
+
+class SearchEngine {
+  - indexName: String
+  + booleanSearch(query: String): JobOffer[]
+  + advancedFilter(filters: FilterCriteria): JobOffer[]
+  + fullTextSearch(query: String): SearchResult[]
+}
+
+class Chatbot {
+  - conversationId: UUID
+  - context: JSON
+  + handleMessage(message: String): String
+  + getIntent(message: String): Intent
+  + suggestJobs(preferences: JSON): JobOffer[]
+}
+
+class GamificationSystem {
+  - userId: UUID
+  - score: Integer
+  - level: Integer
+  - badges: Badge[]
+  + awardPoints(action: String): void
+  + unlockBadge(badge: Badge): void
+  + calculateLevel(): Integer
+}
+
+class Badge {
+  - id: UUID
+  - name: String
+  - description: String
+  - icon: String
+  - criteria: JSON
+}
+
+' ==================== RELATIONS ====================
+User <|-- Candidate
+User <|-- Recruiter
+User <|-- Admin
+User "1" -- "1" UserRole
+User "1" -- "1" AccountStatus
+
+Recruiter "1" -- "0..*" JobOffer : creates >
+JobOffer "1" -- "1" SalaryRange
+JobOffer "1" -- "1" ContractType
+JobOffer "1" -- "1" ExperienceLevel
+JobOffer "1" -- "1" OfferStatus
+
+Candidate "1" -- "0..*" Application : submits >
+JobOffer "1" -- "0..*" Application : receives >
+Application "1" -- "1" ApplicationStatus
+
+User "1" -- "0..*" Notification : receives >
+Notification "1" -- "1" NotificationType
+Notification "1" -- "1" NotificationChannel
+
+Recruiter "1" -- "0..*" Payment : makes >
+Payment "1" -- "1" PaymentMethod
+Payment "1" -- "1" PaymentStatus
+
+User "1" -- "0..*" Log : generates >
+
+Admin "1" -- "0..*" ContactMessage : manages >
+ContactMessage "1" -- "1" MessageStatus
+
+AIMatching ..> Candidate : analyzes
+AIMatching ..> JobOffer : matches
+SearchEngine ..> JobOffer : searches
+Chatbot ..> JobOffer : recommends
+GamificationSystem "1" -- "0..*" Badge
+Candidate "1" -- "1" GamificationSystem
+
+@enduml
